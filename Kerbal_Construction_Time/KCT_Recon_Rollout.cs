@@ -13,6 +13,7 @@ namespace KerbalConstructionTime
         [Persistent] public string launchPadID = "LaunchPad";
         public enum RolloutReconType { Reconditioning, Rollout, Rollback, Recovery, None };
         private RolloutReconType RRTypeInternal = RolloutReconType.None;
+
         public RolloutReconType RRType
         {
             get
@@ -37,32 +38,22 @@ namespace KerbalConstructionTime
                 RRTypeInternal = value;
             }
         }
+
         public KCT_BuildListVessel associatedBLV
         {
             get
             {
-                if (KSC != null)
-                {
-                    KCT_BuildListVessel ves = KSC.VABWarehouse.Find(blv => blv.id == new Guid(associatedID));
-                    if (ves != null)
-                        return ves;
-
-                    ves = KSC.VABList.Find(blv => blv.id == new Guid(associatedID));
-                    if (ves != null)
-                        return ves;
-
-                    ves = KSC.SPHWarehouse.Find(blv => blv.id == new Guid(associatedID));
-                    if (ves != null)
-                        return ves;
-
-                    ves = KSC.SPHList.Find(blv => blv.id == new Guid(associatedID));
-                    if (ves != null)
-                        return ves;
-                }
-                return null;
+                return KCT_Utilities.FindBLVesselByID(new Guid(associatedID));
             }
         }
-        public KCT_KSC KSC { get { return KCT_GameStates.KSCs.Count > 0 ? KCT_GameStates.KSCs.FirstOrDefault(k => k.Recon_Rollout.Exists(r=> r.associatedID == this.associatedID)) : null;} }
+
+        public KCT_KSC KSC
+        {
+            get
+            {
+                return KCT_GameStates.KSCs.FirstOrDefault(k => k.Recon_Rollout.Exists(r => r.associatedID == associatedID));
+            }
+        }
 
         public KCT_Recon_Rollout()
         {
@@ -81,10 +72,6 @@ namespace KerbalConstructionTime
             associatedID = id;
             launchPadID = launchSite;
             KCTDebug.Log("New recon_rollout at launchsite: " + launchPadID);
-            //BP = vessel.GetTotalMass() * KCT_GameStates.timeSettings.ReconditioningEffect * KCT_GameStates.timeSettings.OverallMultiplier; //1 day per 50 tons (default) * overall multiplier
-            //BP = KCT_MathParsing.GetStandardFormulaValue("Reconditioning", new Dictionary<string, string>() {{"M", vessel.GetTotalMass().ToString()}, {"O", KCT_PresetManager.Instance.ActivePreset.timeSettings.OverallMultiplier.ToString()},
-            //    {"E", KCT_PresetManager.Instance.ActivePreset.timeSettings.ReconditioningEffect.ToString()}, {"X", KCT_PresetManager.Instance.ActivePreset.timeSettings.MaxReconditioning.ToString()}});
-            //if (BP > KCT_GameStates.timeSettings.MaxReconditioning) BP = KCT_GameStates.timeSettings.MaxReconditioning;
             progress = 0;
             if (type == RolloutReconType.Reconditioning) 
             {
@@ -214,12 +201,12 @@ namespace KerbalConstructionTime
             return Math.Round(100 * (progress / BP), 2);
         }
 
-        string IKCTBuildItem.GetItemName()
+        public string GetItemName()
         {
             return name;
         }
 
-        double IKCTBuildItem.GetBuildRate()
+        public double GetBuildRate()
         {
             double buildRate = 0;
             if (associatedBLV != null && associatedBLV.type == KCT_BuildListVessel.ListType.SPH)
@@ -233,7 +220,7 @@ namespace KerbalConstructionTime
             return buildRate;
         }
 
-        double IKCTBuildItem.GetTimeLeft()
+        public double GetTimeLeft()
         {
             double timeLeft = (BP - progress) / ((IKCTBuildItem)this).GetBuildRate();
             if (RRType == RolloutReconType.Rollback)
@@ -241,12 +228,12 @@ namespace KerbalConstructionTime
             return timeLeft;
         }
 
-        KCT_BuildListVessel.ListType IKCTBuildItem.GetListType()
+        public KCT_BuildListVessel.ListType GetListType()
         {
             return KCT_BuildListVessel.ListType.Reconditioning;
         }
 
-        bool IKCTBuildItem.IsComplete()
+        public bool IsComplete()
         {
             bool complete = progress >= BP;
             if (RRType == RolloutReconType.Rollback)
@@ -254,9 +241,31 @@ namespace KerbalConstructionTime
             return complete;
         }
 
-        public IKCTBuildItem AsBuildItem()
+        public void IncrementProgress(double UTDiff)
         {
-            return (IKCTBuildItem)this;
+            double progBefore = progress;
+            progress += GetBuildRate() * UTDiff;
+            if (progress > BP) progress = BP;
+
+            if (KCT_Utilities.CurrentGameIsCareer() && RRType == RolloutReconType.Rollout && cost > 0)
+            {
+                int steps;
+                if ((steps = (int)(Math.Floor(progress / BP * 10) - Math.Floor(progBefore / BP * 10))) > 0) //passed 10% of the progress
+                {
+                    if (Funding.Instance.Funds < cost / 10) //If they can't afford to continue the rollout, progress stops
+                    {
+                        progress = progBefore;
+                        if (TimeWarp.CurrentRate > 1f && KCT_GameStates.warpInitiated && this == KCT_GameStates.targetedItem)
+                        {
+                            ScreenMessages.PostScreenMessage("Timewarp was stopped because there's insufficient funds to continue the rollout");
+                            TimeWarp.SetRate(0, true);
+                            KCT_GameStates.warpInitiated = false;
+                        }
+                    }
+                    else
+                        KCT_Utilities.SpendFunds(cost / 10 * steps, TransactionReasons.None);
+                }
+            }
         }
     }
 }

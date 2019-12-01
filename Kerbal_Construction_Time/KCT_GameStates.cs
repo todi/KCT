@@ -87,6 +87,8 @@ namespace KerbalConstructionTime
         public static bool PersistenceLoaded = false;
         public static bool isRefunding = false;
 
+        public static AirlaunchParams AirlaunchParams;
+
         public static void reset()
         {
             firstStart = false;

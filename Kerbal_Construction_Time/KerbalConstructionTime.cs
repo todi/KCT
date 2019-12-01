@@ -381,6 +381,7 @@ namespace KerbalConstructionTime
                     KCT_GameStates.launchedCrew.Clear();
                 }
             }
+
             if (HighLogic.LoadedSceneIsFlight)
             {
                 KCT_GUI.hideAll();
@@ -395,17 +396,41 @@ namespace KerbalConstructionTime
                         KCT_Utilities.AddFunds(KCT_GameStates.launchedVessel.cost, TransactionReasons.VesselRollout);
                         FlightGlobals.ActiveVessel.vesselName = KCT_GameStates.launchedVessel.shipName;
                     }
+
                     KCT_Recon_Rollout rollout = KCT_GameStates.ActiveKSC.Recon_Rollout.FirstOrDefault(r => r.associatedID == KCT_GameStates.launchedVessel.id.ToString());
                     if (rollout != null)
                         KCT_GameStates.ActiveKSC.Recon_Rollout.Remove(rollout);
+
+                    KCT_AirlaunchPrep alPrep = KCT_GameStates.ActiveKSC.AirlaunchPrep.FirstOrDefault(r => r.associatedID == KCT_GameStates.launchedVessel.id.ToString());
+                    if (alPrep != null)
+                        KCT_GameStates.ActiveKSC.AirlaunchPrep.Remove(alPrep);
+                }
+
+                if (KCT_GameStates.launchedVessel != null && FlightGlobals.ActiveVessel != null && 
+                    KCT_GameStates.AirlaunchParams != null && KCT_GameStates.AirlaunchParams.VesselId == KCT_GameStates.launchedVessel.id)
+                {
+                    StartCoroutine(AirlaunchRoutine(KCT_GameStates.AirlaunchParams));
                 }
             }
+
             ratesUpdated = false;
             KCTDebug.Log("Start finished");
             DelayedStart();
 
             UpdateTechlistIconColor();
             StartCoroutine(HandleEditorButton_Coroutine());
+        }
+
+        private IEnumerator AirlaunchRoutine(AirlaunchParams launchParams)
+        {
+            yield return new WaitForSeconds(3);
+            for (int i = 5; i > 0; i--)
+            {
+                ScreenMessages.PostScreenMessage($"[KCT] Launching in {i}...", 1f, ScreenMessageStyle.UPPER_CENTER, XKCDColors.Red);
+                yield return new WaitForSeconds(1);
+            }
+
+            HyperEdit_Utilities.DoAirlaunch(launchParams);
         }
 
         private void EditorRecalculation()
@@ -762,7 +787,6 @@ namespace KerbalConstructionTime
 
                 foreach (KCT_KSC ksc in KCT_GameStates.KSCs)
                 {
-                    //foreach (KCT_Recon_Rollout rr in ksc.Recon_Rollout)
                     for (int i = 0; i < ksc.Recon_Rollout.Count; i++)
                     {
                         KCT_Recon_Rollout rr = ksc.Recon_Rollout[i];
@@ -770,6 +794,17 @@ namespace KerbalConstructionTime
                         {
                             KCTDebug.Log("Invalid Recon_Rollout at " + ksc.KSCName + ". ID " + rr.associatedID + " not found.");
                             ksc.Recon_Rollout.Remove(rr);
+                            i--;
+                        }
+                    }
+
+                    for (int i = 0; i < ksc.AirlaunchPrep.Count; i++)
+                    {
+                        KCT_AirlaunchPrep ap = ksc.AirlaunchPrep[i];
+                        if (KCT_Utilities.FindBLVesselByID(new Guid(ap.associatedID)) == null)
+                        {
+                            KCTDebug.Log("Invalid KCT_AirlaunchPrep at " + ksc.KSCName + ". ID " + ap.associatedID + " not found.");
+                            ksc.AirlaunchPrep.Remove(ap);
                             i--;
                         }
                     }
@@ -822,6 +857,16 @@ namespace KerbalConstructionTime
                         if (rr.associatedID == blv.id.ToString())
                         {
                             ksc.Recon_Rollout.Remove(rr);
+                            i--;
+                        }
+                    }
+
+                    for (int i = 0; i < ksc.AirlaunchPrep.Count; i++)
+                    {
+                        KCT_AirlaunchPrep ap = ksc.AirlaunchPrep[i];
+                        if (ap.associatedID == blv.id.ToString())
+                        {
+                            ksc.AirlaunchPrep.Remove(ap);
                             i--;
                         }
                     }

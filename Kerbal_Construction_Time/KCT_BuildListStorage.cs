@@ -21,9 +21,10 @@ namespace KerbalConstructionTime
         [Persistent]
         List<BuildListItem> SPHPlans = new List<BuildListItem>();
 
-
-        [Persistent]KCT_Recon_Rollout LPRecon = new KCT_Recon_Rollout();
-
+        [Persistent]
+        KCT_Recon_Rollout LPRecon = new KCT_Recon_Rollout();
+        [Persistent]
+        KCT_AirlaunchPrep AirlaunchPrep = new KCT_AirlaunchPrep();
 
         public override void OnDecodeFromConfigNode()
         {
@@ -34,6 +35,7 @@ namespace KerbalConstructionTime
             KCT_GameStates.ActiveKSC.VABPlans.Clear();
             KCT_GameStates.ActiveKSC.SPHPlans.Clear();
             KCT_GameStates.ActiveKSC.Recon_Rollout.Clear();
+            KCT_GameStates.ActiveKSC.AirlaunchPrep.Clear();
 
             foreach (BuildListItem b in VABBuildList)
             {
@@ -78,6 +80,7 @@ namespace KerbalConstructionTime
             }
 
             KCT_GameStates.ActiveKSC.Recon_Rollout.Add(LPRecon);
+            KCT_GameStates.ActiveKSC.AirlaunchPrep.Add(AirlaunchPrep);
         }
 
         public override void OnEncodeToConfigNode()
@@ -87,7 +90,7 @@ namespace KerbalConstructionTime
             VABWarehouse.Clear();
             SPHWarehouse.Clear();
             VABPlans.Clear();
-            SPHPlans.Clear();           
+            SPHPlans.Clear();
         }
 
         public class BuildListItem

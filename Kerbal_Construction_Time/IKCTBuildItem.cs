@@ -12,6 +12,7 @@ namespace KerbalConstructionTime
         double GetTimeLeft();
         KCT_BuildListVessel.ListType GetListType();
         bool IsComplete();
+        void IncrementProgress(double UTDiff);
     }
 }
 /*

@@ -127,6 +127,23 @@ namespace KerbalConstructionTime
             return (this.isComplete);
         }
 
+        public void IncrementProgress(double UTDiff)
+        {
+            progress += BuildRate * UTDiff;
+            if (isComplete || !KCT_PresetManager.Instance.ActivePreset.generalSettings.TechUnlockTimes)
+            {
+                if (KCT_GameStates.settings.ForceStopWarp && TimeWarp.CurrentRate > 1f)
+                    TimeWarp.SetRate(0, true);
+                if (protoNode == null) return;
+                EnableTech();
+                KCT_GameStates.TechList.Remove(this);
+                if (KCT_PresetManager.PresetLoaded() && KCT_PresetManager.Instance.ActivePreset.generalSettings.TechUpgrades)
+                    KCT_GameStates.MiscellaneousTempUpgrades++;
+
+                for (int j = 0; j < KCT_GameStates.TechList.Count; j++)
+                    KCT_GameStates.TechList[j].UpdateBuildRate(j);
+            }
+        }
     }
 
     public class KCT_TechStorageItem

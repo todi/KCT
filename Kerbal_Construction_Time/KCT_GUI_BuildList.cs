@@ -11,6 +11,7 @@ namespace KerbalConstructionTime
     {
         private static List<string> launchSites = new List<string>();
         private static int MouseOnRolloutButton = -1;
+        private static int MouseOnAirlaunchButton = -1;
         private static int listWindow = -1;
         private static bool VABSelected, SPHSelected, TechSelected;
         public static void SelectList(string list)
@@ -290,19 +291,17 @@ namespace KerbalConstructionTime
                 foreach (KCT_Recon_Rollout reconditioning in KCT_GameStates.ActiveKSC.Recon_Rollout.FindAll(r => r.RRType == KCT_Recon_Rollout.RolloutReconType.Reconditioning))
                 {
                     GUILayout.BeginHorizontal();
-                    IKCTBuildItem item = reconditioning.AsBuildItem();
                     if (!HighLogic.LoadedSceneIsEditor && GUILayout.Button("Warp To", GUILayout.Width((butW + 4) * 3)))
                     {
-                        KCT_GameStates.targetedItem = item;
+                        KCT_GameStates.targetedItem = reconditioning;
                         KCT_GameStates.canWarp = true;
-                        KCT_Utilities.RampUpWarp(item);
+                        KCT_Utilities.RampUpWarp(reconditioning);
                         KCT_GameStates.warpInitiated = true;
-
                     }
 
                     GUILayout.Label("Reconditioning: " + reconditioning.launchPadID);
                     GUILayout.Label(reconditioning.ProgressPercent().ToString() + "%", GUILayout.Width(width1 / 2));
-                    GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(item.GetTimeLeft()), GUILayout.Width(width2));
+                    GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(reconditioning.GetTimeLeft()), GUILayout.Width(width2));
                     //GUILayout.Label(Math.Round(KCT_GameStates.ActiveKSC.GetReconditioning().BP, 2).ToString(), GUILayout.Width(width1 / 2 + 10));
 
                     //GUILayout.Space((butW + 4) * 3);
@@ -439,7 +438,7 @@ namespace KerbalConstructionTime
                             padStatus = VesselPadStatus.RollingOut;
                             status = "Rolling Out to " + launchSite;
                             textColor = yellowText;
-                            if (rollout.AsBuildItem().IsComplete())
+                            if (rollout.IsComplete())
                             {
                                 padStatus = VesselPadStatus.RolledOut;
                                 status = "At " + launchSite;
@@ -491,7 +490,7 @@ namespace KerbalConstructionTime
                             KCT_Recon_Rollout tmpRollout = new KCT_Recon_Rollout(b, KCT_Recon_Rollout.RolloutReconType.Rollout, b.id.ToString(), launchSite);
                             if (tmpRollout.cost > 0d)
                                 GUILayout.Label("√" + tmpRollout.cost.ToString("N0"));
-                            string rolloutText = (i == MouseOnRolloutButton ? MagiCore.Utilities.GetColonFormattedTime(tmpRollout.AsBuildItem().GetTimeLeft()) : "Rollout");
+                            string rolloutText = (i == MouseOnRolloutButton ? MagiCore.Utilities.GetColonFormattedTime(tmpRollout.GetTimeLeft()) : "Rollout");
                             if (GUILayout.Button(rolloutText, btnColor, GUILayout.ExpandWidth(false)))
                             {
                                 if (KCT_PresetManager.Instance.ActivePreset.generalSettings.ReconditioningBlocksPad && hasRecond)
@@ -541,24 +540,24 @@ namespace KerbalConstructionTime
                                 else if (i == MouseOnRolloutButton)
                                     MouseOnRolloutButton = -1;
                         }
-                        else if (rolloutEnabled && !HighLogic.LoadedSceneIsEditor && recovery == null && rollout != null && b.id.ToString() == rollout.associatedID && !rollout.AsBuildItem().IsComplete() && rollback == null &&
-                            GUILayout.Button(MagiCore.Utilities.GetColonFormattedTime(rollout.AsBuildItem().GetTimeLeft()), GUILayout.ExpandWidth(false))) //swap rollout to rollback
+                        else if (rolloutEnabled && !HighLogic.LoadedSceneIsEditor && recovery == null && rollout != null && b.id.ToString() == rollout.associatedID && !rollout.IsComplete() && rollback == null &&
+                            GUILayout.Button(MagiCore.Utilities.GetColonFormattedTime(rollout.GetTimeLeft()), GUILayout.ExpandWidth(false))) //swap rollout to rollback
                         {
                             rollout.SwapRolloutType();
                         }
-                        else if (rolloutEnabled && !HighLogic.LoadedSceneIsEditor && recovery == null && rollback != null && !rollback.AsBuildItem().IsComplete())
+                        else if (rolloutEnabled && !HighLogic.LoadedSceneIsEditor && recovery == null && rollback != null && !rollback.IsComplete())
                         {
                             if (rollout == null)
                             {
-                                if (GUILayout.Button(MagiCore.Utilities.GetColonFormattedTime(rollback.AsBuildItem().GetTimeLeft()), GUILayout.ExpandWidth(false))) //switch rollback back to rollout
+                                if (GUILayout.Button(MagiCore.Utilities.GetColonFormattedTime(rollback.GetTimeLeft()), GUILayout.ExpandWidth(false))) //switch rollback back to rollout
                                     rollback.SwapRolloutType();
                             }
                             else
                             {
-                                GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(rollback.AsBuildItem().GetTimeLeft()), GUILayout.ExpandWidth(false));
+                                GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(rollback.GetTimeLeft()), GUILayout.ExpandWidth(false));
                             }
                         }
-                        else if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && recovery == null && (!rolloutEnabled || (rollout != null && b.id.ToString() == rollout.associatedID && rollout.AsBuildItem().IsComplete())))
+                        else if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && recovery == null && (!rolloutEnabled || (rollout != null && b.id.ToString() == rollout.associatedID && rollout.IsComplete())))
                         {
                             KCT_LaunchPad pad = KCT_GameStates.ActiveKSC.LaunchPads.Find(lp => lp.name == launchSite);
                             bool operational = pad != null ? !pad.destroyed : !KCT_GameStates.ActiveKSC.ActiveLPInstance.destroyed;
@@ -641,7 +640,7 @@ namespace KerbalConstructionTime
                         }
                         else if (!HighLogic.LoadedSceneIsEditor && recovery != null)
                         {
-                            GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(recovery.AsBuildItem().GetTimeLeft()), GUILayout.ExpandWidth(false));
+                            GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(recovery.GetTimeLeft()), GUILayout.ExpandWidth(false));
                         }
 
                         GUILayout.EndHorizontal();
@@ -797,9 +796,26 @@ namespace KerbalConstructionTime
                         if (!b.allPartsValid)
                             continue;
                         string status = "";
+                        GUIStyle textColor = new GUIStyle(GUI.skin.label);
+
                         KCT_Recon_Rollout recovery = KCT_GameStates.ActiveKSC.Recon_Rollout.FirstOrDefault(r => r.associatedID == b.id.ToString() && r.RRType == KCT_Recon_Rollout.RolloutReconType.Recovery);
                         if (recovery != null)
                             status = "Recovering";
+
+                        KCT_AirlaunchPrep airlaunchPrep = KCT_GameStates.ActiveKSC.AirlaunchPrep.FirstOrDefault(r => r.associatedID == b.id.ToString());
+                        if (airlaunchPrep != null)
+                        {
+                            if (airlaunchPrep.IsComplete())
+                            {
+                                status = "Ready";
+                                textColor = greenText;
+                            }
+                            else
+                            {
+                                status = airlaunchPrep.GetItemName();
+                                textColor = yellowText;
+                            }
+                        }
 
                         GUILayout.BeginHorizontal();
                         if (!HighLogic.LoadedSceneIsEditor && status == "")
@@ -816,10 +832,38 @@ namespace KerbalConstructionTime
                         else
                             GUILayout.Space(butW + 4);
 
-                        GUILayout.Label(b.shipName);
+                        GUILayout.Label(b.shipName, textColor);
                         GUILayout.Label(status + "   ", GUILayout.ExpandWidth(false));
                         //ScenarioDestructibles.protoDestructibles["KSCRunway"].
-                        if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && recovery == null && GUILayout.Button("Launch", GUILayout.ExpandWidth(false)))
+
+                        if (HighLogic.LoadedScene != GameScenes.EDITOR && recovery == null && airlaunchPrep == null)
+                        {
+                            var tmpPrep = new KCT_AirlaunchPrep(b, b.id.ToString());
+                            if (tmpPrep.cost > 0d)
+                                GUILayout.Label("√" + tmpPrep.cost.ToString("N0"));
+                            string airlaunchText = i == MouseOnAirlaunchButton ? MagiCore.Utilities.GetColonFormattedTime(tmpPrep.GetTimeLeft()) : "Prep for airlaunch";
+                            if (GUILayout.Button(airlaunchText, GUILayout.ExpandWidth(false)))
+                            {
+                                //TODO: size and mass checks
+                                KCT_GameStates.ActiveKSC.AirlaunchPrep.Add(tmpPrep);
+                            }
+                            if (Event.current.type == EventType.Repaint)
+                                if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
+                                    MouseOnAirlaunchButton = i;
+                                else if (i == MouseOnAirlaunchButton)
+                                    MouseOnAirlaunchButton = -1;
+                        }
+                        else if (HighLogic.LoadedScene != GameScenes.EDITOR && recovery == null && airlaunchPrep != null)
+                        {
+                            string btnText = airlaunchPrep.IsComplete() ? "Unmount" : MagiCore.Utilities.GetColonFormattedTime(airlaunchPrep.GetTimeLeft());
+                             if (GUILayout.Button(btnText, GUILayout.ExpandWidth(false)))
+                            {
+                                airlaunchPrep.SwitchDirection();
+                            }
+                        }
+
+                        string launchBtnText = airlaunchPrep != null ? "Airlaunch" : "Launch";
+                        if (HighLogic.LoadedScene != GameScenes.TRACKSTATION && recovery == null && (airlaunchPrep == null || airlaunchPrep.IsComplete()) && GUILayout.Button(launchBtnText, GUILayout.ExpandWidth(false)))
                         {
                             List<string> facilityChecks = b.MeetsFacilityRequirements(false);
                             if (facilityChecks.Count == 0)
@@ -834,10 +878,18 @@ namespace KerbalConstructionTime
                                     showBLPlus = false;
                                     KCT_GameStates.launchedVessel = b;
                                     KCT_GameStates.launchedVessel.KSC = null;
+
                                     if (ShipConstruction.FindVesselsLandedAt(HighLogic.CurrentGame.flightState, "Runway").Count == 0)
                                     {
-                                        if (!IsCrewable(b.ExtractedParts))
+                                        if (airlaunchPrep != null)
+                                        {
+                                            showBuildList = false;
+                                            showAirlaunch = true;
+                                        }
+                                        else if (!IsCrewable(b.ExtractedParts))
+                                        {
                                             b.Launch();
+                                        }
                                         else
                                         {
                                             showBuildList = false;
@@ -854,6 +906,7 @@ namespace KerbalConstructionTime
                                     {
                                         showBuildList = false;
                                         showClearLaunch = true;
+                                        showAirlaunch = airlaunchPrep != null;
                                     }
                                 }
                             }
@@ -864,7 +917,7 @@ namespace KerbalConstructionTime
                         }
                         else if (recovery != null)
                         {
-                            GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(recovery.AsBuildItem().GetTimeLeft()), GUILayout.ExpandWidth(false));
+                            GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(recovery.GetTimeLeft()), GUILayout.ExpandWidth(false));
                         }
                         GUILayout.EndHorizontal();
                     }
@@ -895,9 +948,9 @@ namespace KerbalConstructionTime
                     foreach (KCT_UpgradingBuilding KCTTech in KSCList)
                     {
                         GUILayout.BeginHorizontal();
-                        GUILayout.Label(KCTTech.AsIKCTBuildItem().GetItemName());
+                        GUILayout.Label(KCTTech.GetItemName());
                         GUILayout.Label(Math.Round(100 * KCTTech.progress / KCTTech.BP, 2) + " %", GUILayout.Width(width1 / 2));
-                        GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(KCTTech.AsIKCTBuildItem().GetTimeLeft()), GUILayout.Width(width1));
+                        GUILayout.Label(MagiCore.Utilities.GetColonFormattedTime(KCTTech.GetTimeLeft()), GUILayout.Width(width1));
                         if (!HighLogic.LoadedSceneIsEditor && GUILayout.Button("Warp", GUILayout.Width(70)))
                         {
                             KCT_GameStates.targetedItem = KCTTech;
@@ -1058,7 +1111,7 @@ namespace KerbalConstructionTime
                     launchSite = b.KSC.ActiveLPInstance.name;
             }
             KCT_Recon_Rollout rollout = KCT_GameStates.ActiveKSC.GetReconRollout(KCT_Recon_Rollout.RolloutReconType.Rollout, launchSite);
-            bool onPad = rollout != null && rollout.AsBuildItem().IsComplete() && rollout.associatedID == b.id.ToString();
+            bool onPad = rollout != null && rollout.IsComplete() && rollout.associatedID == b.id.ToString();
             //This vessel is rolled out onto the pad
 #if KSP1_4
             // 1.4 Addition

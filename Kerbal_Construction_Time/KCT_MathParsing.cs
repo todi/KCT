@@ -31,6 +31,8 @@ namespace KerbalConstructionTime
                 case "RolloutCost": return MathParsing.ParseMath("KCT_ROLLOUT_COST", KCT_PresetManager.Instance.ActivePreset.formulaSettings.RolloutCostFormula, variables);
                 case "NewLaunchPadCost": return MathParsing.ParseMath("KCT_NEW_LAUNCHPAD_COST", KCT_PresetManager.Instance.ActivePreset.formulaSettings.NewLaunchPadCostFormula, variables);
                 case "RushCost": return MathParsing.ParseMath("KCT_RUSH_COST", KCT_PresetManager.Instance.ActivePreset.formulaSettings.RushCostFormula, variables);
+                case "AirlaunchCost": return MathParsing.ParseMath("KCT_AIRLAUNCH_COST", KCT_PresetManager.Instance.ActivePreset.formulaSettings.AirlaunchCostFormula, variables);
+                case "AirlaunchTime": return MathParsing.ParseMath("KCT_AIRLAUNCH_TIME", KCT_PresetManager.Instance.ActivePreset.formulaSettings.AirlaunchTimeFormula, variables);
                 default: return 0;
             }
         }
@@ -140,6 +142,30 @@ namespace KerbalConstructionTime
             return GetStandardFormulaValue("RushCost", variables);
         }
 
+        public static double ParseAirlaunchCostFormula(KCT_BuildListVessel vessel)
+        {
+            if (!KCT_PresetManager.Instance.ActivePreset.generalSettings.Enabled ||
+                string.IsNullOrEmpty(KCT_PresetManager.Instance.ActivePreset.formulaSettings.AirlaunchCostFormula))
+            {
+                return 0;
+            }
+
+            Dictionary<string, string> variables = GetIntegrationRolloutVariables(vessel);
+            return GetStandardFormulaValue("AirlaunchCost", variables);
+        }
+
+        public static double ParseAirlaunchTimeFormula(KCT_BuildListVessel vessel)
+        {
+            if (!KCT_PresetManager.Instance.ActivePreset.generalSettings.Enabled ||
+                string.IsNullOrEmpty(KCT_PresetManager.Instance.ActivePreset.formulaSettings.AirlaunchTimeFormula))
+            {
+                return 0;
+            }
+
+            Dictionary<string, string> variables = GetIntegrationRolloutVariables(vessel);
+            return GetStandardFormulaValue("AirlaunchTime", variables);
+        }
+
         private static Dictionary<string, string> GetIntegrationRolloutVariables(KCT_BuildListVessel vessel)
         {
             double loadedMass, emptyMass, loadedCost, emptyCost;
@@ -168,6 +194,7 @@ namespace KerbalConstructionTime
                 LaunchSiteMax = KCT_Utilities.BuildingUpgradeMaxLevel(SpaceCenterFacility.Runway);
             }
             double BP = vessel.buildPoints;
+            double OverallMult = KCT_PresetManager.Instance.ActivePreset.timeSettings.OverallMultiplier;
 
             Dictionary<string, string> variables = new Dictionary<string, string>();
             variables.Add("M", loadedMass.ToString());
@@ -181,6 +208,7 @@ namespace KerbalConstructionTime
             variables.Add("LM", LaunchSiteMax.ToString());
             variables.Add("EL", EditorLevel.ToString());
             variables.Add("ELM", EditorMax.ToString());
+            variables.Add("O", OverallMult.ToString());
             variables.Add("SN", vessel.numStages.ToString());
             variables.Add("SP", vessel.numStageParts.ToString());
             variables.Add("SC", vessel.stagePartCost.ToString());
@@ -192,8 +220,6 @@ namespace KerbalConstructionTime
 
         public static double ParseReconditioningFormula(KCT_BuildListVessel vessel, bool isReconditioning)
         {
-           // new Dictionary<string, string>() {{"M", vessel.GetTotalMass().ToString()}, {"O", KCT_PresetManager.Instance.ActivePreset.timeSettings.OverallMultiplier.ToString()},
-            //    {"E", KCT_PresetManager.Instance.ActivePreset.timeSettings.ReconditioningEffect.ToString()}, {"X", KCT_PresetManager.Instance.ActivePreset.timeSettings.MaxReconditioning.ToString()}});
             Dictionary<string, string> variables = new Dictionary<string, string>();
 
             double loadedMass, emptyMass, loadedCost, emptyCost;

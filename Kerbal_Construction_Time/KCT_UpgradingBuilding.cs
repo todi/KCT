@@ -136,15 +136,14 @@ namespace KerbalConstructionTime
             return KCT_BuildListVessel.ListType.KSC;
         }
 
-        public IKCTBuildItem AsIKCTBuildItem()
+        public void IncrementProgress(double UTDiff)
         {
-            return this;
-        }
-
-        public void AddProgress(double amt)
-        {
-            progress += amt;
-            if (progress > BP) progress = BP;
+            if (!IsComplete()) AddProgress(GetBuildRate() * UTDiff);
+            if (HighLogic.LoadedScene == GameScenes.SPACECENTER && (IsComplete() || !KCT_PresetManager.Instance.ActivePreset.generalSettings.KSCUpgradeTimes))
+            {
+                if (ScenarioUpgradeableFacilities.Instance != null && KCT_GameStates.erroredDuringOnLoad.OnLoadFinished)
+                    Upgrade();
+            }
         }
 
         public static double CalculateBP(double cost)
@@ -161,6 +160,12 @@ namespace KerbalConstructionTime
             double rateTotal = KCT_Utilities.GetBothBuildRateSum(KSC ?? KCT_GameStates.ActiveKSC);
 
             return bp / rateTotal;
+        }
+
+        private void AddProgress(double amt)
+        {
+            progress += amt;
+            if (progress > BP) progress = BP;
         }
     }
 }

@@ -77,6 +77,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AirlaunchParams.cs" />
     <Compile Include="AssemblyVersion-RO.cs">
       <DependentUpon>AssemblyVersion-RO.tt</DependentUpon>
       <AutoGen>True</AutoGen>
@@ -84,10 +85,12 @@
     </Compile>
     <Compile Include="CrewRandRAPI.cs" />
     <Compile Include="CTIWrapper.cs" />
+    <Compile Include="HyperEdit_Utilities.cs" />
     <Compile Include="IKCTBuildItem.cs" />
     <Compile Include="InstallChecker.cs" />
     <Compile Include="KACWrapper.cs" />
     <Compile Include="KCTDebug.cs" />
+    <Compile Include="KCT_AirlaunchPrep.cs" />
     <Compile Include="KCT_BuildListStorage.cs" />
     <Compile Include="KCT_BuildListVessel.cs" />
     <Compile Include="KCT_BuildPlans.cs" />

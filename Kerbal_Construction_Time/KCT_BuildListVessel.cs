@@ -1030,42 +1030,49 @@ namespace KerbalConstructionTime
             return lockedPartsOnShip;
         }
 
-        public double AddProgress(double toAdd)
-        {
-            progress+=toAdd;
-            return progress;
-        }
-
         public double ProgressPercent()
         {
             return 100 * (progress / (buildPoints + integrationPoints));
         }
 
-        string IKCTBuildItem.GetItemName()
+        public string GetItemName()
         {
             return this.shipName;
         }
 
-        double IKCTBuildItem.GetBuildRate()
+        public double GetBuildRate()
         {
             return this.buildRate;
         }
 
-        double IKCTBuildItem.GetTimeLeft()
+        public double GetTimeLeft()
         {
             return this.timeLeft;
         }
 
-        ListType IKCTBuildItem.GetListType()
+        public ListType GetListType()
         {
             return this.type;
         }
 
-        bool IKCTBuildItem.IsComplete()
+        public bool IsComplete()
         {
             return (progress >= buildPoints + integrationPoints);
         }
 
+        public void IncrementProgress(double UTDiff)
+        {
+            double buildRate = KCT_Utilities.GetBuildRate(this);
+            AddProgress(buildRate * UTDiff);
+            if (IsComplete())
+                KCT_Utilities.MoveVesselToWarehouse(this);
+        }
+
+        private double AddProgress(double toAdd)
+        {
+            progress += toAdd;
+            return progress;
+        }
     }
 
     public class PseudoPart

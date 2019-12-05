@@ -78,6 +78,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AirlaunchParams.cs" />
+    <Compile Include="AirlaunchTechLevel.cs" />
     <Compile Include="AssemblyVersion-RO.cs">
       <DependentUpon>AssemblyVersion-RO.tt</DependentUpon>
       <AutoGen>True</AutoGen>

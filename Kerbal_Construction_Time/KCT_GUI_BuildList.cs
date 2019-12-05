@@ -836,7 +836,7 @@ namespace KerbalConstructionTime
                         GUILayout.Label(status + "   ", GUILayout.ExpandWidth(false));
                         //ScenarioDestructibles.protoDestructibles["KSCRunway"].
 
-                        if (HighLogic.LoadedScene != GameScenes.EDITOR && recovery == null && airlaunchPrep == null)
+                        if (HighLogic.LoadedScene != GameScenes.EDITOR && recovery == null && airlaunchPrep == null && AirlaunchTechLevel.AnyUnlocked())
                         {
                             var tmpPrep = new KCT_AirlaunchPrep(b, b.id.ToString());
                             if (tmpPrep.cost > 0d)
@@ -844,8 +844,15 @@ namespace KerbalConstructionTime
                             string airlaunchText = i == MouseOnAirlaunchButton ? MagiCore.Utilities.GetColonFormattedTime(tmpPrep.GetTimeLeft()) : "Prep for airlaunch";
                             if (GUILayout.Button(airlaunchText, GUILayout.ExpandWidth(false)))
                             {
-                                //TODO: size and mass checks
-                                KCT_GameStates.ActiveKSC.AirlaunchPrep.Add(tmpPrep);
+                                AirlaunchTechLevel lvl = AirlaunchTechLevel.GetCurrentLevel();
+                                if (!lvl.CanLaunchVessel(b, out string failedReason))
+                                {
+                                    ScreenMessages.PostScreenMessage($"Vessel failed validation: {failedReason}", 6f, ScreenMessageStyle.UPPER_CENTER);
+                                }
+                                else
+                                {
+                                    KCT_GameStates.ActiveKSC.AirlaunchPrep.Add(tmpPrep);
+                                }
                             }
                             if (Event.current.type == EventType.Repaint)
                                 if (GUILayoutUtility.GetLastRect().Contains(Event.current.mousePosition))
@@ -856,7 +863,7 @@ namespace KerbalConstructionTime
                         else if (HighLogic.LoadedScene != GameScenes.EDITOR && recovery == null && airlaunchPrep != null)
                         {
                             string btnText = airlaunchPrep.IsComplete() ? "Unmount" : MagiCore.Utilities.GetColonFormattedTime(airlaunchPrep.GetTimeLeft());
-                             if (GUILayout.Button(btnText, GUILayout.ExpandWidth(false)))
+                            if (GUILayout.Button(btnText, GUILayout.ExpandWidth(false)))
                             {
                                 airlaunchPrep.SwitchDirection();
                             }

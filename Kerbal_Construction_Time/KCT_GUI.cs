@@ -2123,7 +2123,7 @@ namespace KerbalConstructionTime
             GUILayout.EndHorizontal();
 
             GUILayout.BeginHorizontal();
-            GUILayout.Label("Altitude from SL: ", GUILayout.ExpandWidth(true)); ;
+            GUILayout.Label("Altitude from SL: ", GUILayout.ExpandWidth(true));
             sAltitude = GUILayout.TextField(sAltitude, GUILayout.MaxWidth(70f));
             GUILayout.Label("m", GUILayout.Width(25f));
             GUILayout.EndHorizontal();

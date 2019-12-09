@@ -1,5 +1,8 @@
 ChangeLog
 
+1.4.7.5
+	Fixed nullref in the editor when not editing a recovered craft
+
 1.4.7.4 
 	Added check for full tanks to the "Fill Tanks" button, which was already there for the "Fill Tanks & Launch" button
 	Deleted old commented out toolbar code
